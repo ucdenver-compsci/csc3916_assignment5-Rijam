@@ -97,7 +97,7 @@ router.route('/Reviews')
         }
     
         Review.findOne({ movieId: req.body.movieId }).exec(function(err, outReview) {
-            if (err || outReview.legnth === 0) {
+            if (err || outReview == null) {
                 return res.status(404).json(err, "Review not found.");
             }
 
@@ -296,7 +296,7 @@ router.route('/movies/:id')
             else if (req.query.reviews === "true") {
                 Movie.aggregate([
                     {
-                        $match: { _id: ObjectId(id) }
+                        $match: { _id: req.params.id } // mongoose.Types.ObjectId(id)
                     },
                     {
                         $lookup: {
