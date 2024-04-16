@@ -213,8 +213,9 @@ router.route('/movies')
             else {
                 res.status(200).json({ success: true, message: "GET Movie", movie: outMovie });
             }
+            
+            console.log("movies GET: outMovie._id ", outMovie._id)
         });
-        console.log("movies GET: outMovie._id ", outMovie._id)
     })
     .post(authJwtController.isAuthenticated, (req, res) => {
         console.log("movies POST: req.body.title ", req.body.title)
