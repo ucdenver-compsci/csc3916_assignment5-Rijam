@@ -95,7 +95,7 @@ router.route('/Reviews')
             return res.status(401).json({ success: false, msg: "Movie ID not provided."})
         }
     
-        Review.find({ movieId: req.body.movieId }).exec(function(err, outReview) {
+        Review.findOne({ movieId: req.body.movieId }).exec(function(err, outReview) {
             if (err || outReview.legnth === 0) {
                 return res.status(404).json(err, "Review not found.");
             }
@@ -178,7 +178,7 @@ router.route('/movies')
             else if (req.query.reviews === "true") {
                 Movie.aggregate([
                     {
-                        $match: { _id: ObjectId(id) }
+                        $match: { _id: mongoose.Type.ObjectId(id) }
                     },
                     {
                         $lookup: {
@@ -208,6 +208,7 @@ router.route('/movies')
                 res.status(200).json({ success: true, message: "GET Movie", movie: outMovie });
             }
         });
+        console.log("movies GET: outMovie._id ", outMovie._id)
     })
     .post(authJwtController.isAuthenticated, (req, res) => {
         console.log("movies POST: req.body.title ", req.body.title)
@@ -288,7 +289,7 @@ router.route('/movies/:id')
             else if (req.query.reviews === "true") {
                 Movie.aggregate([
                     {
-                        $match: { _id: ObjectId(id) }
+                        $match: { _id: mongoose.Type.ObjectId(id) }
                     },
                     {
                         $lookup: {
