@@ -171,7 +171,7 @@ router.route('/movies')
             res.json({success: true, msg: 'GET movie', movie: outMovie})
         });
         */
-        Movie.find({ title: movie.title }).exec(function (err, outMovie) {
+        Movie.findOne({ title: movie.title }).exec(function (err, outMovie) {
             if (err || outMovie == null) {
                 return res.status(404).json({ success: false, message: "Movie not found" });
             } 
