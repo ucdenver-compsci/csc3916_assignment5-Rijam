@@ -14,7 +14,7 @@ var cors = require('cors');
 var User = require('./Users');
 var Movie = require('./Movies');
 var Review = require('./Reviews');
-var mongoose = require('mongoose');
+//var mongoose = require('mongoose');
 
 var app = express();
 app.use(cors());
@@ -179,23 +179,26 @@ router.route('/movies')
             else if (req.query.reviews === "true") {
                 Movie.aggregate([
                     {
-                        $match: { _id: mongoose.Type.ObjectId(id) }
+                        $match: { _id: ObjectId(id) }
                     },
                     {
                         $lookup: {
-                            from: "reviews",
+                            from: "review",
                             localField: "_id",
                             foreignField: "movieId",
-                            as: "movieReviews"
+                            as: "review"
                         }
                     },
                     {
                       $addFields: {
-                        avgRating: { $avg: '$movieReviews.rating' }
+                        avgRating: { $avg: '$review.rating' }
                       }
                     },
                     {
                       $sort: { avgRating: -1 }
+                    },
+                    { 
+                        $limit: 1 
                     }
                 ]).exec(function (err, outReview) {
                     if (err) {
@@ -290,23 +293,26 @@ router.route('/movies/:id')
             else if (req.query.reviews === "true") {
                 Movie.aggregate([
                     {
-                        $match: { _id: mongoose.Type.ObjectId(id) }
+                        $match: { _id: ObjectId(id) }
                     },
                     {
                         $lookup: {
-                            from: "reviews",
+                            from: "review",
                             localField: "_id",
                             foreignField: "movieId",
-                            as: "movieReviews"
+                            as: "review"
                         }
                     },
                     {
                       $addFields: {
-                        avgRating: { $avg: '$movieReviews.rating' }
+                        avgRating: { $avg: '$review.rating' }
                       }
                     },
                     {
                       $sort: { avgRating: -1 }
+                    },
+                    { 
+                        $limit: 1 
                     }
                 ]).exec(function (err, outReview) {
                     if (err) {
