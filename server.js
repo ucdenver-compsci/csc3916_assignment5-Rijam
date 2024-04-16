@@ -89,23 +89,36 @@ router.post('/signin', function (req, res) {
 
 router.route('/Reviews')
     .get(authJwtController.isAuthenticated, (req, res) => {
-        var review = new Review();
-            review.movieId = req.body.movieId;
+
+        if (!req.body.movieId) {
+            return res.status(400).json({ success: false, msg: "Movie ID not provided."})
+        }
     
-        Review.findOne({ movieId: review.movieId }).exec(function(err, outReview) {
+        Review.findOne({ movieId: req.body.movieId }).exec(function(err, outReview) {
             if (err || outReview == null) {
                 return res.status(404).json(err, "Review not found.");
             }
 
-            res.json({success: true, msg: 'GET Review', review: outReview})
+            res.status(200).json({success: true, msg: 'GET Review', review: outReview})
         });
     })
     .post(authJwtController.isAuthenticated, (req, res) => {
+        
+        if (!req.body.movieId) {
+            return res.status(400).json({ success: false, msg: "Movie ID not provided."})
+        }
+
         var review = new Review();
         review.movieId = req.body.movieId;
         review.username = req.body.username;
         review.review = req.body.review;
         review.rating = req.body.rating;
+
+        Movie.find({ _id: req.body.movieId }).exec(function(err, outMovie) {
+            if (err || outMovie == null) {
+                return res.status(401).json(err, "Unable to create review.");
+            }
+        });
 
         review.save(function(err){
             if (err) {
@@ -144,14 +157,52 @@ router.route('/Reviews')
 router.route('/movies')
     .get(authJwtController.isAuthenticated, (req, res) => {
         var movie = new Movie();
-            movie.title = req.body.title;
-    
+        movie.title = req.body.title;
+        /*
         Movie.findOne({ title: movie.title }).exec(function(err, outMovie) {
             if (err || outMovie == null) {
                 return res.status(401).json(err, "Movie not found.");
             }
 
             res.json({success: true, msg: 'GET movie', movie: outMovie})
+        });
+        */
+        Movie.find({ title: movie.title }).exec(function (err, outMovie) {
+            if (err || outMovie == null) {
+                return res.status(404).json({ success: false, message: "Movie not found" });
+            } 
+            else if (req.query.reviews === "true") {
+                Movie.aggregate([
+                    {
+                        $match: { _id: ObjectId(id) }
+                    },
+                    {
+                        $lookup: {
+                            from: "reviews",
+                            localField: "_id",
+                            foreignField: "movieId",
+                            as: "movieReviews"
+                        }
+                    },
+                    {
+                      $addFields: {
+                        avgRating: { $avg: '$movieReviews.rating' }
+                      }
+                    },
+                    {
+                      $sort: { avgRating: -1 }
+                    }
+                ]).exec(function (err, outReview) {
+                    if (err) {
+                        return res.status(404).json({ success: false, message: "Review not found" });
+                    } else {
+                        res.status(200).json({ success: true, message: "GET Review", outReview });
+                    }
+                });
+            }
+            else {
+                res.status(200).json({ success: true, message: "GET Movie", outMovie });
+            }
         });
     })
     .post(authJwtController.isAuthenticated, (req, res) => {
@@ -221,46 +272,44 @@ router.route('/movies')
 
 router.route('/movies/:id')
     .get(authJwtController.isAuthenticated, (req, res) => {
-        var id = req.params.id;
 
-        if (req.query.reviews === "true") {
-            Movie.aggregate([
-                {
-                    $match: { _id: ObjectId(id) }
-                },
-                {
-                    $lookup: {
-                        from: "reviews",
-                        localField: "_id",
-                        foreignField: "movieId",
-                        as: "movieReviews"
+        Movie.find({ _id: req.params.id }).exec(function (err, outMovie) {
+            if (err || outMovie.legnth === 0) {
+                return res.status(404).json({ success: false, message: "Movie not found" });
+            } 
+            else if (req.query.reviews === "true") {
+                Movie.aggregate([
+                    {
+                        $match: { _id: ObjectId(id) }
+                    },
+                    {
+                        $lookup: {
+                            from: "reviews",
+                            localField: "_id",
+                            foreignField: "movieId",
+                            as: "movieReviews"
+                        }
+                    },
+                    {
+                      $addFields: {
+                        avgRating: { $avg: '$movieReviews.rating' }
+                      }
+                    },
+                    {
+                      $sort: { avgRating: -1 }
                     }
-                },
-                {
-                  $addFields: {
-                    avgRating: { $avg: '$movieReviews.rating' }
-                  }
-                },
-                {
-                  $sort: { avgRating: -1 }
-                }
-            ]).exec(function (err, outMovie) {
-                if (err) {
-                    return res.status(404).json({ success: false, message: "Movie not found" });
-                } else {
-                    res.status(200).json({ success: true, message: "GET Movie", outMovie });
-                }
-            });
-        }
-        else {
-            Movie.findById(id).exec(function (err, outMovie) {
-                if (err) {
-                    return res.status(404).json({ success: false, message: "Movie not found" });
-                } else {
-                    res.status(200).json({ success: true, message: "GET Movie", outMovie });
-                }
-            });
-        }
+                ]).exec(function (err, outReview) {
+                    if (err) {
+                        return res.status(404).json({ success: false, message: "Review not found" });
+                    } else {
+                        res.status(200).json({ success: true, message: "GET Review", outReview });
+                    }
+                });
+            }
+            else {
+                res.status(200).json({ success: true, message: "GET Movie", outMovie });
+            }
+        });
     });
 
 app.use('/', router);
