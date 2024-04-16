@@ -175,7 +175,8 @@ router.route('/movies')
         Movie.findOne({ title: movie.title }).exec(function (err, outMovie) {
             if (err || outMovie == null) {
                 return res.status(404).json({ success: false, message: "Movie not found" });
-            } 
+            }
+            /*
             else if (req.query.reviews === "true") {
                 Movie.aggregate([
                     {
@@ -208,6 +209,7 @@ router.route('/movies')
                     }
                 });
             }
+            */
             else {
                 res.status(200).json({ success: true, message: "GET Movie", movie: outMovie });
             }
