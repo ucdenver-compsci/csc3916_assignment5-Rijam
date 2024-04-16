@@ -1,5 +1,5 @@
 /*
-CSC3916 HW4
+CSC3916 HW5
 File: Server.js
 Description: Web API scaffolding for Movie API
  */
@@ -95,8 +95,8 @@ router.route('/Reviews')
             return res.status(401).json({ success: false, msg: "Movie ID not provided."})
         }
     
-        Review.findOne({ movieId: req.body.movieId }).exec(function(err, outReview) {
-            if (err || outReview == null) {
+        Review.find({ movieId: req.body.movieId }).exec(function(err, outReview) {
+            if (err || outReview.legnth === 0) {
                 return res.status(404).json(err, "Review not found.");
             }
 
@@ -200,12 +200,12 @@ router.route('/movies')
                     if (err) {
                         return res.status(404).json({ success: false, message: "Review not found" });
                     } else {
-                        res.status(200).json({ success: true, message: "GET Review", outReview });
+                        res.status(200).json({ success: true, message: "GET Review", review: outReview });
                     }
                 });
             }
             else {
-                res.status(200).json({ success: true, message: "GET Movie", outMovie });
+                res.status(200).json({ success: true, message: "GET Movie", movie: outMovie });
             }
         });
     })
@@ -280,6 +280,7 @@ router.route('/movies')
 router.route('/movies/:id')
     .get(authJwtController.isAuthenticated, (req, res) => {
         console.log("movies/:id GET: req.params.id ", req.params.id)
+        console.log("movies/:id GET: req.query.reviews ", req.query.reviews)
         Movie.find({ _id: req.params.id }).exec(function (err, outMovie) {
             if (err || outMovie.legnth === 0) {
                 return res.status(404).json({ success: false, message: "Movie not found" });
@@ -309,12 +310,12 @@ router.route('/movies/:id')
                     if (err) {
                         return res.status(404).json({ success: false, message: "Review not found" });
                     } else {
-                        res.status(200).json({ success: true, message: "GET Review", outReview });
+                        res.status(200).json({ success: true, message: "GET Review", review: outReview });
                     }
                 });
             }
             else {
-                res.status(200).json({ success: true, message: "GET Movie", outMovie });
+                res.status(200).json({ success: true, message: "GET Movie", movie: outMovie });
             }
         });
     });
