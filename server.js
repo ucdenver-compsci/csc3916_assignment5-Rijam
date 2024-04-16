@@ -89,9 +89,10 @@ router.post('/signin', function (req, res) {
 
 router.route('/Reviews')
     .get(authJwtController.isAuthenticated, (req, res) => {
+        console.log("Reviews GET: req.body.movieId ", req.body.movieId)
 
         if (!req.body.movieId) {
-            return res.status(400).json({ success: false, msg: "Movie ID not provided."})
+            return res.status(401).json({ success: false, msg: "Movie ID not provided."})
         }
     
         Review.findOne({ movieId: req.body.movieId }).exec(function(err, outReview) {
@@ -103,9 +104,10 @@ router.route('/Reviews')
         });
     })
     .post(authJwtController.isAuthenticated, (req, res) => {
-        
+        console.log("Reviews POST: req.body.movieId ", req.body.movieId)
+
         if (!req.body.movieId) {
-            return res.status(400).json({ success: false, msg: "Movie ID not provided."})
+            return res.status(401).json({ success: false, msg: "Movie ID not provided."})
         }
 
         var review = new Review();
@@ -132,6 +134,7 @@ router.route('/Reviews')
         });
     })
     .delete(authJwtController.isAuthenticated, (req, res) => {
+        console.log("Reviews DELETE: req.body.movieId ", req.body.movieId)
         // HTTP DELETE Method
         // Requires JWT authentication.
         // Returns a JSON object with status, message, headers, query, and env.
@@ -156,6 +159,7 @@ router.route('/Reviews')
 
 router.route('/movies')
     .get(authJwtController.isAuthenticated, (req, res) => {
+        console.log("movies GET: req.body.title ", req.body.title)
         var movie = new Movie();
         movie.title = req.body.title;
         /*
@@ -206,6 +210,7 @@ router.route('/movies')
         });
     })
     .post(authJwtController.isAuthenticated, (req, res) => {
+        console.log("movies POST: req.body.title ", req.body.title)
         if (!req.body.title || !req.body.genre || !req.body.actors) {
             res.json({success: false, msg: 'Please include the title, genre, and actors.'})
         } else {
@@ -228,6 +233,7 @@ router.route('/movies')
         }
     })
     .put(authJwtController.isAuthenticated, (req, res) => {
+        console.log("movies PUT: req.body.title ", req.body.title)
         // HTTP PUT Method
         // Requires JWT authentication.
         // Returns a JSON object with status, message, headers, query, and env.
@@ -250,6 +256,7 @@ router.route('/movies')
         }
     })
     .delete(authJwtController.isAuthenticated, (req, res) => {
+        console.log("movies DELETE: req.body.title ", req.body.title)
         // HTTP DELETE Method
         // Requires JWT authentication.
         // Returns a JSON object with status, message, headers, query, and env.
@@ -272,7 +279,7 @@ router.route('/movies')
 
 router.route('/movies/:id')
     .get(authJwtController.isAuthenticated, (req, res) => {
-
+        console.log("movies/:id GET: req.params.id ", req.params.id)
         Movie.find({ _id: req.params.id }).exec(function (err, outMovie) {
             if (err || outMovie.legnth === 0) {
                 return res.status(404).json({ success: false, message: "Movie not found" });
