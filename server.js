@@ -168,38 +168,30 @@ router.route('/Reviews')
 router.route('/movies')
     .get(authJwtController.isAuthenticated, (req, res) => {
         console.log("movies GET: req.body.title ", req.body.title);
+        console.log("movies GET: req.query.reviews ", req.query.reviews);
         var movie = new Movie();
         movie.title = req.body.title;
-        /*
-        Movie.findOne({ title: movie.title }).exec(function(err, outMovie) {
-            if (err || outMovie == null) {
-                return res.status(401).json(err, "Movie not found.");
-            }
 
-            res.json({success: true, msg: 'GET movie', movie: outMovie})
-        });
-        */
         Movie.findOne({ title: movie.title }).exec(function (err, outMovie) {
             if (err || outMovie == null) {
                 return res.status(404).json({ success: false, message: "Movie not found" });
             }
-            /*
             else if (req.query.reviews === "true") {
                 Movie.aggregate([
                     {
-                        $match: { _id: ObjectId(id) }
+                        $match: { _id: req.params.id } // mongoose.Types.ObjectId(id)
                     },
                     {
                         $lookup: {
-                            from: "review",
-                            localField: "_id",
-                            foreignField: "movieId",
-                            as: "review"
+                            from: "reviews", // name of the foreign collection
+                            localField: "_id", // field in the orders collection
+                            foreignField: "movieId", // field in the items collection
+                            as: "movieReviews" // output array where the joined items will be placed
                         }
                     },
                     {
                       $addFields: {
-                        avgRating: { $avg: '$review.rating' }
+                        avgRating: { $avg: '$movieReviews.rating' }
                       }
                     },
                     {
@@ -209,14 +201,14 @@ router.route('/movies')
                         $limit: 1 
                     }
                 ]).exec(function (err, outReview) {
-                    if (err) {
+                    if (err || outReview == null) {
                         return res.status(404).json({ success: false, message: "Review not found" });
                     } else {
-                        res.status(200).json({ success: true, message: "GET Review", review: outReview });
+                        console.log("movies GET: outReview ", outReview);
+                        res.status(200).json({ success: true, message: "GET Movie & Review", movie: outMovie, review: outReview });
                     }
                 });
             }
-            */
             else {
                 res.status(200).json({ success: true, message: "GET Movie", movie: outMovie });
             }
@@ -261,6 +253,7 @@ router.route('/movies')
             movie.genre = req.body.genre;
             movie.actors = req.body.actors;
             movie.releaseDate = req.body.releaseDate;
+            movie.imageUrl = req.body.imageUrl;
     
             Movie.findOneAndUpdate({ title: movie.title}, {relaseDate: movie.releaseDate, genre: movie.genre, actors: movie.actors}).exec(function(err) {
                 if (err) {
@@ -330,7 +323,7 @@ router.route('/movies/:id')
                         return res.status(404).json({ success: false, message: "Review not found" });
                     } else {
                         console.log("movies/:id GET: outReview ", outReview);
-                        res.status(200).json({ success: true, message: "GET Review", movie: outMovie, review: outReview });
+                        res.status(200).json({ success: true, message: "GET Movie & Review", movie: outMovie, review: outReview });
                     }
                 });
             }
