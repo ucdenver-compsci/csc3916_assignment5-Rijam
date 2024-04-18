@@ -90,17 +90,24 @@ router.post('/signin', function (req, res) {
 
 router.route('/Reviews')
     .get(authJwtController.isAuthenticated, (req, res) => {
-        console.log("Reviews GET: req.body.movieId ", req.body.movieId)
+        console.log("Reviews GET: req.body.movieId ", req.body.movieId);
+
+        var review = new Review();
+        review.movieId = req.body.movieId;
 
         if (!req.body.movieId) {
             return res.status(401).json({ success: false, msg: "Movie ID not provided."});
         }
+
+        console.log("Reviews GET: id provided", review.movieId);
     
-        Review.findOne({ movieId: req.body.movieId }).exec(function(err, outReview) {
+        Review.findOne({ movieId: review.movieId }).exec(function(err, outReview) {
             if (err || outReview == null) {
+                console.log("Reviews GET: review not found");
                 return res.status(404).json(err, "Review not found.");
             }
 
+            console.log("Reviews GET: outReview ", outReview);
             res.status(200).json({success: true, msg: 'GET Review', review: outReview});
         });
     })
@@ -126,12 +133,12 @@ router.route('/Reviews')
         review.save(function(err){
             if (err) {
                 if (err.code == 11000)
-                    return res.json({ success: false, message: 'A review with that name already exists.'});
+                    return res.status(401).json({ success: false, message: 'A review with that name already exists.'});
                 else
-                    return res.json(err);
+                    return res.status(404).json(err);
             }
 
-            res.json({success: true, msg: 'Review created!', review: review})
+            res.status(200).json({success: true, msg: 'Review created!', review: review})
         });
     })
     .delete(authJwtController.isAuthenticated, (req, res) => {
@@ -147,9 +154,9 @@ router.route('/Reviews')
     
         Review.findOneAndDelete({ movieId: review.movieId }).exec(function(err, outReview) {
             if (err) {
-                return res.json(err);
+                return res.status(404).json(err);
             }
-            res.json({success: true, msg: 'Review deleted', review: outReview})
+            res.status(200).json({success: true, msg: 'Review deleted', review: outReview})
         });
     })
     .all((req, res) => {
@@ -220,7 +227,7 @@ router.route('/movies')
     .post(authJwtController.isAuthenticated, (req, res) => {
         console.log("movies POST: req.body.title ", req.body.title)
         if (!req.body.title || !req.body.genre || !req.body.actors) {
-            res.json({success: false, msg: 'Please include the title, genre, and actors.'})
+            res.status(401).json({success: false, msg: 'Please include the title, genre, and actors.'})
         } else {
             var movie = new Movie();
             movie.title = req.body.title;
@@ -231,12 +238,12 @@ router.route('/movies')
             movie.save(function(err){
                 if (err) {
                     if (err.code == 11000)
-                        return res.json({ success: false, message: 'A movie with that name already exists.'});
+                        return res.status(401).json({ success: false, message: 'A movie with that name already exists.'});
                     else
-                        return res.json(err);
+                        return res.status(404).json(err);
                 }
     
-                res.json({success: true, msg: 'Movie saved', movie: movie.title})
+                res.status(200).json({success: true, msg: 'Movie saved', movie: movie.title})
             });
         }
     })
@@ -246,7 +253,7 @@ router.route('/movies')
         // Requires JWT authentication.
         // Returns a JSON object with status, message, headers, query, and env.
         if (!req.body.title || !req.body.genre || !req.body.actors) {
-            res.json({success: false, msg: 'Please include the title, genre, and actors.'})
+            res.status(401).json({success: false, msg: 'Please include the title, genre, and actors.'})
         } else {
             var movie = new Movie();
             movie.title = req.body.title;
@@ -256,10 +263,10 @@ router.route('/movies')
     
             Movie.findOneAndUpdate({ title: movie.title}, {relaseDate: movie.releaseDate, genre: movie.genre, actors: movie.actors}).exec(function(err) {
                 if (err) {
-                    return res.json(err);
+                    return res.status(404).json(err);
                 }
     
-                res.json({success: true, msg: 'Movie updated', movie: movie.title})
+                res.status(200).json({success: true, msg: 'Movie updated', movie: movie.title})
             });
         }
     })
@@ -274,9 +281,9 @@ router.route('/movies')
     
         Movie.findOneAndDelete({ title: movie.title }).exec(function(err, outMovie) {
             if (err) {
-                return res.json(err);
+                return res.status(404).json(err);
             }
-            res.json({success: true, msg: 'Movie deleted', movie: outMovie.title})
+            res.status(200).json({success: true, msg: 'Movie deleted', movie: outMovie.title})
         });
     })
     .all((req, res) => {
