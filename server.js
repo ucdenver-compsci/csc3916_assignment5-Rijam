@@ -104,7 +104,7 @@ router.route('/Reviews')
         Review.findOne({ movieId: review.movieId }).exec(function(err, outReview) {
             if (err || outReview == null) {
                 console.log("Reviews GET: review not found");
-                return res.status(404).json(err, "Review not found.");
+                return res.status(404).json({ success: false, msg: "Review not found."});
             }
 
             console.log("Reviews GET: outReview ", outReview);
@@ -126,7 +126,7 @@ router.route('/Reviews')
 
         Movie.find({ _id: req.body.movieId }).exec(function(err, outMovie) {
             if (err || outMovie == null) {
-                return res.status(401).json(err, "Unable to create review.");
+                return res.status(401).json({ success: false, msg: "Unable to create review." });
             }
         });
 
@@ -135,7 +135,7 @@ router.route('/Reviews')
                 if (err.code == 11000)
                     return res.status(401).json({ success: false, message: 'A review with that name already exists.'});
                 else
-                    return res.status(404).json(err);
+                    return res.status(404).json({ success: false, msg: "Unable to create review." });
             }
 
             res.status(200).json({success: true, msg: 'Review created!', review: review})
@@ -154,7 +154,7 @@ router.route('/Reviews')
     
         Review.findOneAndDelete({ movieId: review.movieId }).exec(function(err, outReview) {
             if (err) {
-                return res.status(404).json(err);
+                return res.status(404).json({ success: false, msg: "Unable to delete review." });
             }
             res.status(200).json({success: true, msg: 'Review deleted', review: outReview})
         });
@@ -234,13 +234,14 @@ router.route('/movies')
             movie.genre = req.body.genre;
             movie.actors = req.body.actors;
             movie.releaseDate = req.body.releaseDate != null ? req.body.releaseDate : null;
+            movie.imageUrl = req.body.imageUrl;
     
             movie.save(function(err){
                 if (err) {
                     if (err.code == 11000)
                         return res.status(401).json({ success: false, message: 'A movie with that name already exists.'});
                     else
-                        return res.status(404).json(err);
+                        return res.status(404).json({ success: false, message: "Could not save movie."});
                 }
     
                 res.status(200).json({success: true, msg: 'Movie saved', movie: movie.title})
@@ -263,7 +264,7 @@ router.route('/movies')
     
             Movie.findOneAndUpdate({ title: movie.title}, {relaseDate: movie.releaseDate, genre: movie.genre, actors: movie.actors}).exec(function(err) {
                 if (err) {
-                    return res.status(404).json(err);
+                    return res.status(404).json({success: false, msg: "Could not update movie."});
                 }
     
                 res.status(200).json({success: true, msg: 'Movie updated', movie: movie.title})
@@ -281,7 +282,7 @@ router.route('/movies')
     
         Movie.findOneAndDelete({ title: movie.title }).exec(function(err, outMovie) {
             if (err) {
-                return res.status(404).json(err);
+                return res.status(404).json({success: false, msg: "Could not delete movie."});
             }
             res.status(200).json({success: true, msg: 'Movie deleted', movie: outMovie.title})
         });
@@ -328,7 +329,8 @@ router.route('/movies/:id')
                     if (err || outReview == null) {
                         return res.status(404).json({ success: false, message: "Review not found" });
                     } else {
-                        res.status(200).json({ success: true, message: "GET Review", review: outReview });
+                        console.log("movies/:id GET: outReview ", outReview);
+                        res.status(200).json({ success: true, message: "GET Review", movie: outMovie, review: outReview });
                     }
                 });
             }
